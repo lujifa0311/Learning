@@ -1,0 +1,91 @@
+
+impala-shell -q "select substr(create_time,1,10),count(1) from ods_198_as_user_combination where create_day=20200924 and create_time>'2020-01-01' group by substr(create_time,1,10) order by substr(create_time,1,10) desc" -B --output_delimiter="\t" --print_header -o /home/as_user_combination.xlsx
+
+
+hive -e “select * from ods_198_as_user_combination where create_day=20200924 and create_time<'2020-09-21' and create_time>='2020-09-20'” >> res1.csv
+
+
+hive -e "set hive.cli.print.header=true;select * from cdp_prod.etl_much_update_customer_identity where update_day>=20200925" | sed 's/[\t]/,/g'  > etl_much_update_customer_identity.csv
+
+select id as as_userid,cell_phone,create_time from cdp_prod.ods_198_pd_as_user where create_day=20200924 and create_time<'2020-09-21' and create_time>='2020-09-20' and deleted='0'
+and  length(cell_phone) = 11 and substring(cell_phone,1,3) in ('130','131','132','133','134','135','136','137','138','139','145','147','149','150','151','152','153', '155','156','157','158','159','166','170','171','172','173','175','176','177','178','180','181','182','183','184','185','186','187','188','189','192','198','199')
+
+
+
+select count(1) from ods_198_pd_as_user s1 left anti join ods_198_pd_as_user s2 on s2.create_day=2020092501 and s2.modify_time<'2020-09-21' and s2.create_time<'2020-09-21' and s2.create_time=s1.create_time where s1.create_day=2020092501 and s1.modify_time<'2020-09-21' and s1.create_time<'2020-09-21';
+
+
+ select id from ods_198_pd_as_user s1 left anti join ods_198_pd_as_user s2 on s2.create_day=2020092502 and s2.create_time=s1.create_time where s1.create_day=2020092501 limit 11
+
+
+
+
+
+alter table cdp_prod.ods_198_pd_orderproductdetail drop partition(create_day=20201005);
+
+alter table ods_198_pd_usercoupon partition(create_day=20200925) rename to partition(create_day=20200926)
+
+
+alter table etl_pull_order partition(create_day=20201014) rename to partition(create_day=20201013);         
+alter table ods_198_pd_as_user partition(create_day=20201014) rename to partition(create_day=2020101402);                  
+alter table ods_198_pd_as_user_point_record partition(create_day=20201014) rename to partition(create_day=2020101401);     
+alter table ods_198_pd_dim_store_info partition(create_day=20201014) rename to partition(create_day=2020101401);           
+alter table ods_198_pd_dm_country_info partition(create_day=20201014) rename to partition(create_day=2020101401);          
+alter table ods_198_pd_ordaddressdetail partition(create_day=20201014) rename to partition(create_day=2020101401);         
+alter table ods_198_pd_ordcussrvdetail_extension partition(create_day=20201014) rename to partition(create_day=2020101401);
+alter table ods_198_pd_orderproductdetail partition(create_day=20201014) rename to partition(create_day=20201013);       
+alter table ods_198_pd_paymentdetail partition(create_day=20201014) rename to partition(create_day=2020101401);            
+alter table ods_198_pd_usercoupon partition(create_day=20201014) rename to partition(create_day=2020101401);
+alter table ods_198_pd_usercoupon_cl partition(create_day=20201014) rename to partition(create_day=2020101401);
+alter table etl_much_update_customer_identity partition(update_day=20201014) rename to partition(update_day=2020101401);
+alter table etl_pull_cid_customer partition(create_day=20201014) rename to partition(create_day=2020101401);           
+alter table etl_pull_customer partition(create_day=20201014) rename to partition(create_day=2020101401);               
+alter table etl_pull_order_head partition(create_day=20201014) rename to partition(create_day=2020101401);             
+alter table etl_table_count partition(create_day=20201014) rename to partition(create_day=2020101401);                 
+alter table etl_update_customer_identity partition(update_day=20201014) rename to partition(update_day=2020101401);
+
+refresh etl_much_update_customer_identity;
+refresh etl_pull_cid_customer;           
+refresh etl_pull_customer;                
+refresh etl_pull_order;     
+refresh etl_pull_order_3pp;            
+refresh etl_table_count;                  
+refresh etl_update_customer_identity;     
+refresh ods_198_as_user_combination;         
+refresh ods_198_pd_as_user;                  
+refresh ods_198_pd_as_user_point_record;     
+refresh ods_198_pd_dim_store_info;           
+refresh ods_198_pd_dm_country_info;          
+refresh ods_198_pd_ordaddressdetail;         
+refresh ods_198_pd_ordcussrvdetail_extension;
+refresh ods_198_pd_orderproductdetail;       
+refresh ods_198_pd_paymentdetail;            
+refresh ods_198_pd_usercoupon;
+refresh ods_198_pd_usercoupon_cl;                
+refresh ods_198_syncbatchlog;
+  
+
+
+show partitions etl_much_update_customer_identity;
+show partitions etl_pull_cid_customer;           
+show partitions etl_pull_customer;                
+show partitions etl_pull_order;
+show partitions etl_pull_order_3pp;                 
+show partitions etl_table_count;                  
+show partitions etl_update_customer_identity;     
+show partitions ods_198_as_user_combination;         
+show partitions ods_198_pd_as_user;                  
+show partitions ods_198_pd_as_user_point_record;     
+show partitions ods_198_pd_dim_store_info;           
+show partitions ods_198_pd_dm_country_info;          
+show partitions ods_198_pd_ordaddressdetail;         
+show partitions ods_198_pd_ordcussrvdetail_extension;
+show partitions ods_198_pd_orderproductdetail;       
+show partitions ods_198_pd_paymentdetail;            
+show partitions ods_198_pd_usercoupon; 
+show partitions ods_198_pd_usercoupon_cl;               
+show partitions ods_198_syncbatchlog;  
+
+
+select * from ods_198_as_user_combination c inner join ods_198_pd_ordcussrvdetail_extension o on o.create_day=20201010 and c.cellphone=o.CustomerPhoneNumber
+where create_day=20201012 and create_time>='2020-10-12' and as_userid is null
