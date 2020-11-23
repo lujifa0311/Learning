@@ -34,7 +34,6 @@ select ''c_membercode'',MEMBER_CODE,id,to_utc_timestamp(REGIST_DATE,''Asia/Shang
 '{"sql":"SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;insert into xiaoshu.customer_identity(tenant_id,version,type,value,customer_id,date_created,last_updated) values (1,0,?,?,?,?,now()) ON DUPLICATE KEY UPDATE version=version+1"}',
 null
 )
-
 --查询
 
 --查询任务运行状态
@@ -49,6 +48,7 @@ update etl_task_run set status='Resume' where status='Fail' and period='2020-07-
 delete from  xiaoshu.etl_task_schedule where task_name='update_matf_communication_tag_monthly';
 --删除run中的任务
 delete from xiaoshu.etl_task_run where period='2020-07-01' and task_name='SparkETL';
+--添加新的任务
 
 
 
