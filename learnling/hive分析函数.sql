@@ -152,6 +152,15 @@ ORDER BY
  agent_code,
  order_amount DESC;
 
+SELECT s.Num FROM(
+SELECT s1.Num,(s1.id-s1.cnt) sn 
+FROM (SELECT
+     Num,
+     id,
+     LAG ( id, 1 ) OVER ( PARTITION BY Num ORDER BY id DESC ) cnt 
+     FROM
+     表名) s1) s1 group by s1.Num having count(s1.sn)>=3
+
 
 结果输出
 A001    800     NULL
