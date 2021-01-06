@@ -1,0 +1,50 @@
+kudu
+1.kudu是什么?
+  是一个大数据存储引擎 用于大数据的存储,结合其它软件开展数据分析
+  汲取了hdfs中高吞吐数据的能力和hbase中高随机读写数据的能力
+  既满足有传统olap分析  有满足随机读写访问数据
+  kudu来自于cloudera后来贡献给了apache
+
+2.kudu的架构
+    kudu集群是主从架构
+     主角色 master:管理集群  管理元数据
+	 从角色 tablet server:负责最终数据的存储  对外提供数据读写能力 里面存储的就是一个个tablet
+	kudu tablet
+	 是kudu表中数据水平分区  一个表可以划分为多个tablet类似于hbase的regin
+	 tablet中主键是不重复联系的  所有tablet加起来就是一个table的所有数据
+	 tablet在存储的时候 会进行冗余存放  设置多个副本
+	 在一个tablet所有冗余中 任意时刻一个是leader 其他所有的冗余都是follower
+	 每个tablet都可以进行数据的读请求  但是只有leader tablet负责写数据请求 
+	 
+3.操作kudu的数据
+  java api
+  spark api
+  
+4.kudu集成impala语法
+
+5.存储结构解析
+ 一个Table包含多个Tablet，其中Tablet的数量是根据hash或者range进行设置
+ 一个Tablet中包含MetaData信息和多个RowSet信息
+ 一个Rowset中包含一个MemRowSet与0个或多个DiskRowset，其中MemRowSet存储insert的数据，
+    一旦MemRowSet写满会flush到磁盘生成一个或多个DiskRowSet，此时MemRowSet清空。MemRowSet默认写满1G或者120s flush一次
+(注意:memRowSet是行式存储，DiskRowSet是列式存储，MemRowSet基于primary key有序)。每隔tablet中会定期对一些diskrowset做compaction操作，
+目的是对多个diskRowSet进行重新排序，以此来使其更有序并减少diskRowSet的数量，同时在compaction的过程中会resolve掉deltaStores当中的delete记录
+ 一个DiskRowSet包含baseData与DeltaStores两部分，其中baseData存储的数据看起来不可改变，DeltaStores中存储的是改变的数据
+ DeltaStores包含一个DeltaMemStores和多个DeltaFile,其中DeltaMemStores放在内存，用来存储update与delete数据，
+一旦DeltaMemStores写满，会flush成DeltaFile。
+当DeltaFile过多会影响查询性能，所以KUDU每隔一段时间会执行compaction操作，
+将其合并到baseData中，主要是resolve掉update数据
+
+6.读数据的流程
+  客户端将要读取的数据信息发送给master，master对其进行一定的校验，比如表是否存在，字段是否存在。
+  Master返回元数据信息给client，然后client与tserver建立连接，通过metaData找到数据所在的RowSet，
+  首先加载内存里面的数据(MemRowSet与DeltMemStore),然后加载磁盘里面的数据，最后返回最终数据给client.
+  
+7.写数据的流程
+   Client首先连接master，获取元数据信息。然后连接tserver，查找MemRowSet与DeltMemStore中是否存在相同primary key，
+   如果存在，则报错;如果不存在，则将待插入的数据写入WAL日志，然后将数据写入MemRowSet。
+8.更新数据的流程
+   Client首先向master请求元数据，然后根据元数据提供的tablet信息，连接tserver，根据数据所处位置的不同，
+   有不同的操作:在内存MemRowSet中的数据，会将更新信息写入数据所在行的mutation链表中；在磁盘中的数据，会将更新信息写入DeltMemStore中。
+
+  
